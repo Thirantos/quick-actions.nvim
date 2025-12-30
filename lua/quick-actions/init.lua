@@ -1,9 +1,10 @@
 ---@module 'quick-actions'
 local M = {}
-
+local keybindings = require("quick-actions.keybindings")
+local core = require("quick-actions.core")
 local defaults = {
-	enabled = true,
-	config_filename = ".nvimqa",
+	actions_filename = ".nvimqa",
+	keybind_prefix = "<leader>a",
 }
 
 ---@param opts? quick-actions.SetupOpts
@@ -15,48 +16,65 @@ function M.setup(opts)
 		settings = {
 			yaml = {
 				schemas = {
-					[schema] = M.opts.config_filename,
+					[schema] = M.opts.actions_filename,
 				},
 			},
 		},
 	})
+
+	vim.filetype.add({
+		pattern = {
+			[M.opts.actions_filename] = "yaml",
+		},
+	})
+
+	M.reloadConfig()
+
+	vim.keymap.set("n", M.opts.keybind_prefix, keybindings.dispatch, {
+		noremap = true,
+		silent = true,
+		desc = "QuickActions",
+	})
 end
 
-function M.postSave()
-	if vim.fn.executable("./onSave") == 1 then
-		vim.notify("running ./onSave")
-		vim.system({ "./onSave" }, { text = true }, function(obj)
-			if obj.stdout ~= "" then
-				vim.notify(obj.stdout)
-			end
-			if obj.stderr ~= "" then
-				vim.notify(obj.stderr, vim.log.levels.WARN)
-			end
-		end)
+---@param action quick-actions.AutoActionType
+function M.autoAction(action)
+	return function()
+		if core.auto[action] == nil then
+			return
+		end
+
+		core.runAction("auto", action)
 	end
 end
 
-function M.postRead() end
-
----@param filepath string
-function loadYaml(filepath)
-	if vim.fn.filereadable(filepath) == 0 then
-		return {}
-	end
-	local file = io.open(filepath, "r")
-	if not file then
-		return {}
-	end
-	local filecontent = file:read("*a")
-	local contents = require("quick-actions.lib.lua-tinyyaml.tinyyaml").parse(filecontent)
-	return contents
+function M.run(action)
+	core.runAction("actions", action)
 end
 
-function M.loadConfig()
-	local filepath = "./" .. M.opts.config_filename
-	local content = loadYaml(filepath)
+function M.reloadConfig()
+	keybindings.bindings = {}
+	core.actions = {}
+	core.auto = {}
+
+	local filepath = "./" .. M.opts.actions_filename
+	local content = require("quick-actions.utils").loadYaml(filepath)
 	if content == {} then
 		return
+	end
+
+	if content.auto ~= nil then
+		core.auto = content.auto
+	end
+
+	if content.actions ~= nil then
+		core.actions = content.actions
+
+		for action, data in pairs(core.actions) do
+			if data.keybind ~= nil then
+				keybindings.register(data.keybind, action)
+			end
+		end
 	end
 end
 

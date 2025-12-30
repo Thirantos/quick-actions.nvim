@@ -2,18 +2,61 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "enabled": {
-            "type": "boolean",
-            "description": "Enable the plugin"
+        "actions": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9]+$": {
+                    "type": "object",
+                    "properties": {
+                        "keybind": {
+                            "type": "string"
+                        },
+                        "cmd": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "vim": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
         },
-        "log_level": {
-            "type": "string",
-            "enum": [
-                "debug",
-                "info",
-                "warn",
-                "error"
-            ]
+        "auto": {
+            "type": "object",
+            "patternProperties": {
+                "^(onSave|onOpen|onExit)$": {
+                    "$ref": "#/definitions/autoCmd"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "definitions": {
+        "autoCmd": {
+            "type": "object",
+            "properties": {
+                "cmd": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "vim": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
         }
     },
     "additionalProperties": false
