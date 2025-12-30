@@ -1,0 +1,2 @@
+---@class quick-actions.SetupOpts
+---@field enabled? boolean

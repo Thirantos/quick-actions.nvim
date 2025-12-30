@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "description": "Enable the plugin"
+        },
+        "log_level": {
+            "type": "string",
+            "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
